@@ -668,7 +668,16 @@ async function apiCall(method, path, body) {
     };
     if (body) options.body = JSON.stringify(body);
 
-    const resp = await fetch(API_BASE + path, options);
+    const url = API_BASE + path;
+    const resp = await fetch(url, options);
+    
+    // 调试：如果状态码不是200，显示详细信息
+    if (!resp.ok) {
+      const text = await resp.text();
+      showToast('请求失败 [' + resp.status + '] ' + url + ': ' + text.slice(0, 100), 'error');
+      return null;
+    }
+    
     const data = await resp.json();
 
     if (!data.ok) {
