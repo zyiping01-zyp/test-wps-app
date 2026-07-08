@@ -625,9 +625,6 @@ async function handleCallback() {
         localStorage.setItem('refresh_token', data.refresh_token);
       }
       sessionStorage.removeItem('pkce_verifier');
-        localStorage.setItem('refresh_token', data.refresh_token);
-      }
-      sessionStorage.removeItem('pkce_verifier');
       // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
       showToast('登录成功！', 'success');
@@ -1090,7 +1087,7 @@ function showPreLoginConfig() {
 function savePreLoginConfig() {
   const clientId = document.getElementById('preLoginClientId').value.trim();
   const fileId = document.getElementById('preLoginFileId').value.trim();
-  if (!clientId) { showToast('请输入 Client ID', 'warning'); return; }
+  if (!clientId) { showToast('请���入 Client ID', 'warning'); return; }
   if (!fileId) { showToast('请输入多维表 File ID', 'warning'); return; }
   state.config.clientId = clientId;
   state.config.fileId = fileId;
