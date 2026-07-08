@@ -1,6 +1,8 @@
 const express = require('express');
-const fetch = require('node-fetch');
+const https = require('https');
+const http = require('http');
 const path = require('path');
+const { URL } = require('url');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,6 +13,9 @@ const WPS_CLIENT_SECRET = process.env.WPS_CLIENT_SECRET || '';
 
 const API_BASE = 'https://openapi.wps.cn';
 
+// Basic Auth 头
+const basicAuth = Buffer.from(WPS_CLIENT_ID + ':' + WPS_CLIENT_SECRET).toString('base64');
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -18,14 +23,46 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ============================================================
-// API 代理接口
+// 辅助函数
 // ============================================================
 
-// 辅助函数：拼接 form 请求体
 function toFormBody(params) {
   return Object.entries(params)
     .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v || ''))
     .join('&');
+}
+
+// 用原生 https 模块发送 POST 请求（避免 node-fetch 兼容问题）
+function httpsPost(url, body, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(url);
+    const data = Buffer.from(body);
+    const options = {
+      hostname: u.hostname,
+      port: 443,
+      path: u.pathname + u.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': data.length,
+        ...headers,
+      },
+    };
+    const req = https.request(options, (res) => {
+      let chunks = [];
+      res.on('data', (c) => chunks.push(c));
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(Buffer.concat(chunks).toString()));
+        } catch (e) {
+          resolve({ error: 'parse_error', raw: Buffer.concat(chunks).toString() });
+        }
+      });
+    });
+    req.on('error', reject);
+    req.write(data);
+    req.end();
+  });
 }
 
 // 1. 获取应用级 access_token（用于操作多维表）
@@ -36,12 +73,9 @@ async function getAppToken() {
     grant_type: 'client_credentials',
     scope: 'kso.dbsheet.readwrite',
   });
-  const resp = await fetch(`${API_BASE}/oauth2/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
+  const data = await httpsPost(`${API_BASE}/oauth2/token`, body, {
+    'Authorization': 'Basic ' + basicAuth,
   });
-  const data = await resp.json();
   if (!data.access_token) {
     throw new Error('获取应用 token 失败: ' + JSON.stringify(data));
   }
@@ -59,12 +93,9 @@ app.post('/api/token', async (req, res) => {
       code,
       redirect_uri,
     });
-    const resp = await fetch(`${API_BASE}/oauth2/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body,
+    const data = await httpsPost(`${API_BASE}/oauth2/token`, body, {
+      'Authorization': 'Basic ' + basicAuth,
     });
-    const data = await resp.json();
     if (data.access_token) {
       res.json({
         ok: true,
@@ -108,12 +139,9 @@ app.post('/api/refresh', async (req, res) => {
       grant_type: 'refresh_token',
       refresh_token,
     });
-    const resp = await fetch(`${API_BASE}/oauth2/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body,
+    const data = await httpsPost(`${API_BASE}/oauth2/token`, body, {
+      'Authorization': 'Basic ' + basicAuth,
     });
-    const data = await resp.json();
     if (data.access_token) {
       res.json({
         ok: true,
