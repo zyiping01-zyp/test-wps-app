@@ -546,7 +546,7 @@ let state = {
   seats: [],
   selectedSeats: new Set(),
   myUserId: null,
-  config: { clientId: '', fileId: 'hZxs1oL261MSdn1L2qqZ1xQXMxTQfGJty' },
+  config: { clientId: '', fileId: 'hZxs1oL261MSdn1L2qqZ1xQXMxTQfGJty', callbackUrl: '' },
   sheetId: 2,
   pollingTimer: null
 };
@@ -585,7 +585,8 @@ function login() {
     return;
   }
 
-  const redirectUri = window.location.origin + window.location.pathname;
+  let redirectUri = (window.location.origin + window.location.pathname).replace(/\/+$/, '');
+  // Remove trailing slash to match registered callback URL
   const params = new URLSearchParams({
     client_id: clientId,
     response_type: 'code',
@@ -608,7 +609,7 @@ async function handleCallback() {
 
   if (!code) return false;
 
-  const redirectUri = window.location.origin + window.location.pathname;
+  const redirectUri = (window.location.origin + window.location.pathname).replace(/\/+$/, '');
 
   try {
     const resp = await fetch('/api/token', {
