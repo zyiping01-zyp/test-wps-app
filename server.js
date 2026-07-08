@@ -56,6 +56,11 @@ function toFormBody(params) {
 // API 路由（放在静态文件中间件之前）
 // ============================================================
 
+// 调试：检查服务是否正常
+app.get('/api/status', (req, res) => {
+  res.json({ ok: true, time: Date.now() });
+});
+
 // 获取应用 token（用于操作多维表）
 async function getAppToken() {
   const body = toFormBody({
@@ -161,6 +166,12 @@ app.post('/api/dbsheet/records/update', async (req, res) => {
 // ============================================================
 // 静态文件 + SPA 降级
 // ============================================================
+
+// API 404 处理（返回 JSON）
+app.use('/api', (req, res) => {
+  res.status(404).json({ ok: false, error: 'API 路由未找到: ' + req.method + ' ' + req.originalUrl });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
