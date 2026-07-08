@@ -21,17 +21,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 // API 代理接口
 // ============================================================
 
+// 辅助函数：拼接 form 请求体
+function toFormBody(params) {
+  return Object.entries(params)
+    .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v || ''))
+    .join('&');
+}
+
 // 1. 获取应用级 access_token（用于操作多维表）
 async function getAppToken() {
+  const body = toFormBody({
+    client_id: WPS_CLIENT_ID,
+    client_secret: WPS_CLIENT_SECRET,
+    grant_type: 'client_credentials',
+    scope: 'kso.dbsheet.readwrite',
+  });
   const resp = await fetch(`${API_BASE}/oauth2/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: WPS_CLIENT_ID,
-      client_secret: WPS_CLIENT_SECRET,
-      grant_type: 'client_credentials',
-      scope: 'kso.dbsheet.readwrite',
-    }),
+    body,
   });
   const data = await resp.json();
   if (!data.access_token) {
@@ -44,16 +52,17 @@ async function getAppToken() {
 app.post('/api/token', async (req, res) => {
   try {
     const { code, redirect_uri } = req.body;
+    const body = toFormBody({
+      client_id: WPS_CLIENT_ID,
+      client_secret: WPS_CLIENT_SECRET,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri,
+    });
     const resp = await fetch(`${API_BASE}/oauth2/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: WPS_CLIENT_ID,
-        client_secret: WPS_CLIENT_SECRET,
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri,
-      }),
+      body,
     });
     const data = await resp.json();
     if (data.access_token) {
@@ -93,15 +102,16 @@ app.get('/api/user/me', async (req, res) => {
 app.post('/api/refresh', async (req, res) => {
   try {
     const { refresh_token } = req.body;
+    const body = toFormBody({
+      client_id: WPS_CLIENT_ID,
+      client_secret: WPS_CLIENT_SECRET,
+      grant_type: 'refresh_token',
+      refresh_token,
+    });
     const resp = await fetch(`${API_BASE}/oauth2/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: WPS_CLIENT_ID,
-        client_secret: WPS_CLIENT_SECRET,
-        grant_type: 'refresh_token',
-        refresh_token,
-      }),
+      body,
     });
     const data = await resp.json();
     if (data.access_token) {
