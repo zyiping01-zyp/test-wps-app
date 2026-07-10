@@ -524,11 +524,6 @@
 </div>
 
 <script>
-// 全局错误捕获
-window.onerror = function(msg, url, line, col, err) {
-  showToast('JS错误: ' + msg + ' (行' + line + ')', 'error');
-};
-
 // ============================================================
 // Configuration
 // ============================================================
@@ -1040,11 +1035,6 @@ function resetUI() {
   stopPolling();
 }
 
-function toggleConfig() {
-  const panel = document.getElementById('configPanel');
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-}
-
 function saveConfig() {
   const clientId = document.getElementById('clientIdInput').value.trim();
   const fileId = document.getElementById('fileIdInput').value.trim();
@@ -1167,8 +1157,7 @@ async function initApp() {
   document.getElementById('userName').textContent = state.user.user_name || state.user.name || '用户';
   document.getElementById('userAvatar').textContent = (state.user.user_name || '?')[0];
 
-  // 显示管理员设置入口（齿轮图标）
-  document.getElementById('adminBtn').style.display = 'inline';
+
 
   // Load seats
   await refreshSeats();
