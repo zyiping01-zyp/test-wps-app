@@ -163,11 +163,13 @@ app.post('/api/dbsheet/records', async (req, res) => {
     if (!token) return res.status(401).json({ ok: false, error: '未提供令牌' });
     const apiPath = '/v7/coop/dbsheet/' + file_id + '/sheets/' + (sheet_id || 2) + '/records';
     const body = JSON.stringify({ page_size: page_size || 100 });
+    console.log('Calling WPS API:', apiPath);
     const data = await httpsRequest(API_BASE + apiPath, 'POST', body, {
       'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json',
     });
+    console.log('WPS API response:', JSON.stringify(data).slice(0, 300));
     if (data.code === 0) res.json({ ok: true, data: data.data });
-    else res.json({ ok: false, error: data.msg });
+    else res.json({ ok: false, error: data.msg || JSON.stringify(data) });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
