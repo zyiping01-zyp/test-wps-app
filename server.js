@@ -134,8 +134,11 @@ app.post('/api/dbsheet/records', async (req, res) => {
     const { file_id, sheet_id, page_size } = req.body;
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ ok: false, error: '未提供令牌' });
-    const url = `${API_BASE}/v7/coop/dbsheet/${file_id}/sheets/${sheet_id || 2}/records/list?page_size=${page_size || 100}`;
-    const data = await httpsRequest(url, 'GET', null, {
+    const url = `${API_BASE}/v7/coop/dbsheet/${file_id}/sheets/${sheet_id || 2}/records/list`;
+    const data = await httpsRequest(url, 'POST', JSON.stringify({
+      page_size: page_size || 100,
+      fields: ['座位编号', '排号', '列号', '状态', '选中人'],
+    }), {
       'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json',
     });
     if (data.code === 0) res.json({ ok: true, data: data.data });
