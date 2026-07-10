@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 3000;
 
 const WPS_CLIENT_ID = process.env.WPS_CLIENT_ID || '';
 const WPS_CLIENT_SECRET = process.env.WPS_CLIENT_SECRET || '';
+const ADMIN_USER_ID = process.env.ADMIN_USER_ID || '';
 const API_BASE = 'https://openapi.wps.cn';
 const basicAuth = Buffer.from(WPS_CLIENT_ID + ':' + WPS_CLIENT_SECRET).toString('base64');
 
@@ -67,6 +68,7 @@ app.get('/api/config', (req, res) => {
       clientId: WPS_CLIENT_ID,
       fileId: 'hZxs1oL261MSdn1L2qqZ1xQXMxTQfGJty',
       sheetId: 2,
+      adminUserId: ADMIN_USER_ID,
     }
   });
 });
