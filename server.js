@@ -148,9 +148,8 @@ app.post('/api/dbsheet/records', async (req, res) => {
     if (!token) return res.status(401).json({ ok: false, error: '未提供令牌' });
     const apiPath = '/v7/coop/dbsheet/' + file_id + '/sheets/' + (sheet_id || 2) + '/records/list';
     const body = JSON.stringify({ page_size: page_size || 100, fields: ['座位编号', '排号', '列号', '状态', '选中人'] });
-    const signs = kso1Sign('POST', apiPath, body, WPS_CLIENT_ID, WPS_CLIENT_SECRET);
     const data = await httpsRequest(API_BASE + apiPath, 'POST', body, {
-      'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', ...signs,
+      'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json',
     });
     if (data.code === 0) res.json({ ok: true, data: data.data });
     else res.json({ ok: false, error: data.msg });
@@ -167,9 +166,8 @@ app.post('/api/dbsheet/records/update', async (req, res) => {
     if (!token) return res.status(401).json({ ok: false, error: '未提供令牌' });
     const apiPath2 = '/v7/coop/dbsheet/' + file_id + '/sheets/' + (sheet_id || 2) + '/records/update';
     const body2 = JSON.stringify({ records });
-    const signs2 = kso1Sign('POST', apiPath2, body2, WPS_CLIENT_ID, WPS_CLIENT_SECRET);
     const data = await httpsRequest(API_BASE + apiPath2, 'POST', body2, {
-      'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', ...signs2,
+      'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json',
     });
     if (data.code === 0) res.json({ ok: true, data: data.data });
     else res.json({ ok: false, error: data.msg });
