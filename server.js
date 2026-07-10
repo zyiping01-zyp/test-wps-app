@@ -100,7 +100,7 @@ app.get('/api/user/me', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ ok: false, error: '未提供令牌' });
-    const data = await httpsRequest(`${API_BASE}/v7/user/me`, 'GET', null, {
+    const data = await httpsRequest(`${API_BASE}/v7/users/current`, 'GET', null, {
       'Authorization': 'Bearer ' + token,
     });
     if (data.code === 0) res.json({ ok: true, data: data.data });
