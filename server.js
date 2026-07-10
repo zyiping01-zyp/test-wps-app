@@ -162,7 +162,7 @@ app.post('/api/dbsheet/records', async (req, res) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ ok: false, error: '未提供令牌' });
     const apiPath = '/v7/coop/dbsheet/' + file_id + '/sheets/' + (sheet_id || 2) + '/records';
-    const body = JSON.stringify({ page_size: page_size || 100, fields: ['座位编号', '排号', '列号', '状态', '选中人'] });
+    const body = JSON.stringify({ page_size: page_size || 100 });
     const data = await httpsRequest(API_BASE + apiPath, 'POST', body, {
       'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json',
     });
