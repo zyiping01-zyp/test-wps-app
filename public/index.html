@@ -461,16 +461,13 @@
 </div>
 
 <div class="container">
-  <!-- Config -->
-  <div class="config-panel" id="configPanel">
-    <h3>⚙️ 系统配置</h3>
+  <!-- Config (管理员可见) -->
+  <div class="config-panel" id="configPanel" style="display:none;">
+    <h3>⚙️ 系统配置 <span style="font-size:12px;color:var(--text-secondary);font-weight:normal;">（管理员）</span></h3>
     <div class="config-row">
       <input type="text" id="clientIdInput" placeholder="Client ID（WPS 开放平台应用ID）" />
-      <input type="text" id="fileIdInput" placeholder="多维表 File ID" value="hZxs1oL261MSdn1L2qqZ1xQXMxTQfGJty" />
+      <input type="text" id="fileIdInput" placeholder="多维表 File ID" />
       <button class="btn btn-primary" onclick="saveConfig()">保存配置</button>
-    </div>
-    <div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">
-      💡 首次使用需在 <a href="https://open.wps.cn" target="_blank" style="color:var(--primary);">WPS 开放平台</a> 创建应用，配置回调地址为当前页面地址
     </div>
   </div>
 
@@ -516,10 +513,7 @@
     <h2>座位预约系统</h2>
     <p>请使用 WPS 账号登录后选择座位<br/>支持一次选择多个座位</p>
     <button class="btn-wps" onclick="login()">🔑 使用 WPS 账号登录</button>
-    <div style="margin-top:16px;font-size:13px;color:var(--text-secondary);">
-      首次使用？先
-      <a href="#" onclick="showPreLoginConfig();return false;" style="color:var(--primary);text-decoration:underline;">配置 Client ID</a>
-    </div>
+
   </div>
 </div>
 
@@ -625,7 +619,6 @@ async function handleCallback() {
       if (data.refresh_token) {
         localStorage.setItem('refresh_token', data.refresh_token);
       }
-      sessionStorage.removeItem('pkce_verifier');
       // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
       showToast('登录成功！', 'success');
@@ -1055,6 +1048,9 @@ function saveConfig() {
     return;
   }
 
+  // 如果是管理员配置，保存后隐藏面板
+  document.getElementById('configPanel').style.display = 'none';
+
   state.config.clientId = clientId;
   state.config.fileId = fileId;
   localStorage.setItem('config', JSON.stringify(state.config));
@@ -1112,14 +1108,17 @@ function savePreLoginConfig() {
 // Init
 // ============================================================
 async function initApp() {
-  // Load config
-  const savedConfig = localStorage.getItem('config');
-  if (savedConfig) {
-    try {
-      state.config = JSON.parse(savedConfig);
-      document.getElementById('clientIdInput').value = state.config.clientId || '';
-      document.getElementById('fileIdInput').value = state.config.fileId || 'hZxs1oL261MSdn1L2qqZ1xQXMxTQfGJty';
-    } catch (e) {}
+  // 从后端获取配置
+  try {
+    const resp = await fetch('/api/config');
+    const cfg = await resp.json();
+    if (cfg.ok) {
+      state.config.clientId = cfg.data.clientId;
+      state.config.fileId = cfg.data.fileId;
+      state.sheetId = cfg.data.sheetId;
+    }
+  } catch (e) {
+    console.error('获取配置失败', e);
   }
 
   // Check for OAuth callback
