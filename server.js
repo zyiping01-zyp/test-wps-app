@@ -58,6 +58,19 @@ function toFormBody(params) {
 // ============================================================
 
 // 调试：检查服务是否正常
+
+// 返回前端需要的配置信息（从环境变量读取）
+app.get('/api/config', (req, res) => {
+  res.json({
+    ok: true,
+    data: {
+      clientId: WPS_CLIENT_ID,
+      fileId: 'hZxs1oL261MSdn1L2qqZ1xQXMxTQfGJty',
+      sheetId: 2,
+    }
+  });
+});
+
 app.get('/api/status', (req, res) => {
   res.json({ ok: true, time: Date.now() });
 });
