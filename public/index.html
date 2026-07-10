@@ -1162,10 +1162,8 @@ async function initApp() {
   document.getElementById('userName').textContent = state.user.user_name || state.user.name || '用户';
   document.getElementById('userAvatar').textContent = (state.user.user_name || '?')[0];
 
-  // 只有管理员能看到齿轮图标
-  if (state.config.adminUserId && state.user && (state.user.ex_user_id == state.config.adminUserId || state.user.id == state.config.adminUserId)) {
-    document.getElementById('adminBtn').style.display = 'inline';
-  }
+  // 显示管理员设置入口（齿轮图标）
+  document.getElementById('adminBtn').style.display = 'inline';
 
   // Load seats
   await refreshSeats();
