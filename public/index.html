@@ -668,7 +668,9 @@ async function apiCall(method, path, body) {
     };
     if (body) options.body = JSON.stringify(body);
 
-    const url = API_BASE + path;
+    // 添加时间戳绕过浏览器/CDN缓存
+    const separator = path.includes('?') ? '&' : '?';
+    const url = API_BASE + path + separator + '_t=' + Date.now();
     const resp = await fetch(url, options);
     
     // 调试：如果状态码不是200，显示详细信息
