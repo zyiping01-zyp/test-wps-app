@@ -1,5 +1,6 @@
 const express = require('express');
 const https = require('https');
+const crypto = require('crypto');
 const path = require('path');
 const { URL } = require('url');
 
@@ -60,6 +61,17 @@ function toFormBody(params) {
 app.get('/api/status', (req, res) => {
   res.json({ ok: true, time: Date.now() });
 });
+
+
+// KSO-1 签名函数
+function kso1Sign(method, path, body, ak, sk) {
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const nonce = crypto.randomBytes(16).toString('hex');
+  const date = new Date().toUTCString();
+  const stringToSign = method + '\n' + path + '\n' + (body || '') + '\n' + timestamp + '\n' + nonce;
+  const signature = crypto.createHmac('sha256', sk).update(stringToSign).digest('hex');
+  return { 'X-Kso-Authorization': 'KSO-1 ' + ak + ':' + timestamp + ':' + nonce + ':' + signature, 'X-Kso-Date': date };
+}
 
 // 获取应用 token（用于操作多维表）
 async function getAppToken() {
@@ -134,12 +146,11 @@ app.post('/api/dbsheet/records', async (req, res) => {
     const { file_id, sheet_id, page_size } = req.body;
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ ok: false, error: '未提供令牌' });
-    const url = `${API_BASE}/v7/coop/dbsheet/${file_id}/sheets/${sheet_id || 2}/records/list`;
-    const data = await httpsRequest(url, 'POST', JSON.stringify({
-      page_size: page_size || 100,
-      fields: ['座位编号', '排号', '列号', '状态', '选中人'],
-    }), {
-      'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json',
+    const apiPath = '/v7/coop/dbsheet/' + file_id + '/sheets/' + (sheet_id || 2) + '/records/list';
+    const body = JSON.stringify({ page_size: page_size || 100, fields: ['座位编号', '排号', '列号', '状态', '选中人'] });
+    const signs = kso1Sign('POST', apiPath, body, WPS_CLIENT_ID, WPS_CLIENT_SECRET);
+    const data = await httpsRequest(API_BASE + apiPath, 'POST', body, {
+      'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', ...signs,
     });
     if (data.code === 0) res.json({ ok: true, data: data.data });
     else res.json({ ok: false, error: data.msg });
@@ -154,13 +165,12 @@ app.post('/api/dbsheet/records/update', async (req, res) => {
     const { file_id, sheet_id, records } = req.body;
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ ok: false, error: '未提供令牌' });
-    const data = await httpsRequest(
-      `${API_BASE}/v7/coop/dbsheet/${file_id}/sheets/${sheet_id || 2}/records/update`,
-      'POST', JSON.stringify({ records }), {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json',
-      }
-    );
+    const apiPath2 = '/v7/coop/dbsheet/' + file_id + '/sheets/' + (sheet_id || 2) + '/records/update';
+    const body2 = JSON.stringify({ records });
+    const signs2 = kso1Sign('POST', apiPath2, body2, WPS_CLIENT_ID, WPS_CLIENT_SECRET);
+    const data = await httpsRequest(API_BASE + apiPath2, 'POST', body2, {
+      'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', ...signs2,
+    });
     if (data.code === 0) res.json({ ok: true, data: data.data });
     else res.json({ ok: false, error: data.msg });
   } catch (e) {
