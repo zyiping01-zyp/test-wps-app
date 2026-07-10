@@ -1056,7 +1056,7 @@ function saveConfig() {
   // 如果是管理员配置，保存后隐藏面板
   state.config.adminUserId = state.user ? state.user.id : null;
   document.getElementById('configPanel').style.display = 'none';
-  document.getElementById('adminBtn').style.display = 'inline';
+  
 
   state.config.clientId = clientId;
   state.config.fileId = fileId;
@@ -1165,8 +1165,8 @@ async function initApp() {
   document.getElementById('userAvatar').textContent = (state.user.user_name || '?')[0];
 
   // 管理员识别（第一个配置的人就是管理员）
-  if (state.config.adminUserId && state.user.id == state.config.adminUserId) {
-    document.getElementById('adminBtn').style.display = 'inline';
+  // 管理员设置入口始终可见
+    
   }
 
   // Load seats
