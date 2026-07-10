@@ -1123,10 +1123,7 @@ async function initApp() {
       state.config.clientId = cfg.data.clientId;
       state.config.fileId = cfg.data.fileId;
       state.sheetId = cfg.data.sheetId;
-      // 记录第一个登录的管理员（用于显示设置入口）
-      if (!state.config.adminUserId) {
-        state.config.adminUserId = null;
-      }
+
     }
   } catch (e) {
     console.error('获取配置失败', e);
